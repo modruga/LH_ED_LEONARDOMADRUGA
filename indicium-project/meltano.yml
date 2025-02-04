@@ -1,0 +1,62 @@
+version: 1
+default_environment: dev
+project_id: 52cb280d-9ef2-4ed2-9d6b-102d0decf89b
+environments:
+- name: dev
+- name: staging
+- name: prod
+
+plugins:
+  extractors:
+
+  # postgres-extractor (tap-postgres) extrai dados do banco de dados postgres provido pelo repositorio
+  - name: postgres-extractor
+    inherit_from: tap-postgres
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-postgres.git
+    config:
+      sqlalchemy_url: postgresql://northwind_user:thewindisblowing@localhost:5432/northwind
+      filter_schemas:
+      - public
+
+  # csv-extractor (tap-csv) extrai dados do csv provido pelo repositorio
+  - name: csv-extractor
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: order_details
+        path: ../data/order_details.csv
+        keys:
+        - order_id
+
+  # extrutura de plugins nomeada usando inheritance (inherit_from:) para melhor legibilidade e 
+  # uso de multiplas configs usando a mesma base de modulo (nesse caso, target-csv)
+  loaders:
+
+  # csv-loader-for-postgres (target-csv) armazena os dados coletados por postgres-extractor
+  - name: csv-loader-for-postgres
+    inherit_from: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      destination_path: output/
+      file_naming_scheme: postgres/{stream_name}/{datestamp}/data.csv
+
+  # csv-loader-for-csv (target-csv) armazena os dados coletados por csv-extractor
+  - name: csv-loader-for-csv
+    inherit_from: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      destination_path: output/
+      file_naming_scheme: csv/{datestamp}/data.csv
+jobs:
+- name: extract-data-to-output
+  tasks:
+  - postgres-extractor csv-loader-for-postgres csv-extractor csv-loader-for-csv
+schedules:
+- name: daily-postgres-and-csv-load
+  interval: '@daily'
+  job: extract-data-to-output
