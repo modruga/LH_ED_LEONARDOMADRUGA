@@ -31,8 +31,75 @@ plugins:
         keys:
         - order_id
 
-  # extrutura de plugins nomeada usando inheritance (inherit_from:) para melhor legibilidade e 
-  # uso de multiplas configs usando a mesma base de modulo (nesse caso, target-csv)
+  # TW: gore
+  # nao descobri como instruir o plugin a selecionar diretorios recursivamente (isso doeu muito fisicamente)
+  # executar "export CURRENT_DATE=$(date +'%Y-%m-%d')" para a data atual em forma de variavel de ambiente
+  - name: csv-extractor-local-filesystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: public-categories
+        path: ./output/postgres/public-categories/${CURRENT_DATE}/data.csv
+        keys:
+        - category_id
+
+      - entity: public-customers
+        path: ./output/postgres/public-customers/${CURRENT_DATE}/data.csv
+        keys:
+        - customer_id
+
+      - entity: public-employees
+        path: ./output/postgres/public-employees/${CURRENT_DATE}/data.csv
+        keys:
+        - employee_id
+
+      - entity: public-employee_territories
+        path: ./output/postgres/public-employee_territories/${CURRENT_DATE}/data.csv
+        keys:
+        - territory_id
+
+      - entity: public-orders
+        path: ./output/postgres/public-orders/${CURRENT_DATE}/data.csv
+        keys:
+        - order_id
+
+      - entity: public-products
+        path: ./output/postgres/public-products/${CURRENT_DATE}/data.csv
+        keys:
+        - product_id
+
+      - entity: public-region
+        path: ./output/postgres/public-region/${CURRENT_DATE}/data.csv
+        keys:
+        - region_id
+
+      - entity: public-shippers
+        path: ./output/postgres/public-shippers/${CURRENT_DATE}/data.csv
+        keys:
+        - shipper_id
+
+      - entity: public-suppliers
+        path: ./output/postgres/public-suppliers/${CURRENT_DATE}/data.csv
+        keys:
+        - supplier_id
+
+      - entity: public-territories
+        path: ./output/postgres/public-territories/${CURRENT_DATE}/data.csv
+        keys:
+        - territory_id
+
+      - entity: public-us_states
+        path: ./output/postgres/public-us_states/${CURRENT_DATE}/data.csv
+        keys:
+        - state_id
+
+      - entity: order_details
+        path: ./output/csv/${CURRENT_DATE}/data.csv
+        keys:
+        - order_id
+
   loaders:
 
   # csv-loader-for-postgres (target-csv) armazena os dados coletados por postgres-extractor
@@ -44,6 +111,15 @@ plugins:
       destination_path: output/
       file_naming_scheme: postgres/{stream_name}/{datestamp}/data.csv
 
+  # csv-loader-for-testing serve pra testar o step 2
+  - name: csv-loader-for-testing
+    inherit_from: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      destination_path: output/
+      file_naming_scheme: testing/postgres/{datestamp}/data.csv
+
   # csv-loader-for-csv (target-csv) armazena os dados coletados por csv-extractor
   - name: csv-loader-for-csv
     inherit_from: target-csv
@@ -52,11 +128,36 @@ plugins:
     config:
       destination_path: output/
       file_naming_scheme: csv/{datestamp}/data.csv
+
+  # target-postgres armazena dados capturados por um extractor (step 2) para o banco de dados paralelo
+  - name: target-postgres
+    variant: meltanolabs
+    pip_url: meltanolabs-target-postgres
+    config:
+      postgres_user: usuario
+      database: target
+      port: 5342
+      sqlalchemy_url: postgresql://usuario:senha@localhost:5342/target
+      load_method: overwrite
+
+  utilities:
+
+  - name: airflow
+    variant: apache
+    pip_url: git+https://github.com/meltano/airflow-ext.git@main apache-airflow==2.9.0
+      --constraint 
+      https://raw.githubusercontent.com/apache/airflow/constraints-2.9.0/constraints-no-providers-${MELTANO__PYTHON_VERSION}.txt
 jobs:
 - name: extract-data-to-output
   tasks:
   - postgres-extractor csv-loader-for-postgres csv-extractor csv-loader-for-csv
+- name: step-2-exec-write-db
+  tasks:
+  - csv-extractor-local-filesystem target-postgres
 schedules:
 - name: daily-postgres-and-csv-load
   interval: '@daily'
   job: extract-data-to-output
+- name: step_2_dag
+  interval: '@daily'
+  job: step-2-exec-write-db
