@@ -1,6 +1,6 @@
 # Indicium Tech Code Challenge
 
-Esse desafio foi preparado para ser desenvolvido em um ambiente linux usando Python.
+A resolucao do desafio foi preparada para ser executada em um ambiente linux usando ambiente virtual Python.
 
 ## Como executar
 
@@ -31,4 +31,8 @@ Execute ```meltano run step-2-exec-write-db```. Isso ira copiar todos os dados d
 # Conclusoes
 
 ## Notas do autor
-Configurar as ferramentas pela primeira vez foi um desafio consideravel, consumindo uma quantia relevante do tempo de desenvolvimento. Compreender a modularidade do meltano, sua relacao com as etapas do pipeline (extract, load, orchestrate) e o processo de automacao usando jobs com suas respectivas tasks foi importante para o meu desenvolvimento pessoal no ingresso do mundo de engenharia de dados. O conjunto, como um todo, para o intervalo de entrega, provou-se ter uma quantia grande de conteudos e acredito que me sai bem dentro do que consegui fazer. O desafio nao foi completamente vencido, como podem notar pela ausencia da capacidade de executar os comandos usando datas anteriores como argumento, porem fiquei orgulhoso com meu rendimento paralelo a universidade e monitoria em uma semana bem caotica. Outro ponto que posso trazer seria que varios processos poderiam ser automatizados atraves de bash files (processo de instalacao e exportacao da variavel que expoe o dia atual), assim como o uso de DAG customizada no airflow (qual tentei implementar sem sucesso, onde uso BashCommand seguido de um DAG trigger). Agradeco a oportunidade e a proposta de desafio, pois independente da minha colocacao como aprovado ou nao, foi um otimo projeto de aprendizado e acrescentou muito ao meu dicionario de programador.
+Configurar as ferramentas pela primeira vez foi um desafio consideravel, consumindo uma quantia relevante do tempo de desenvolvimento. Compreender a modularidade do meltano, sua relacao com as etapas do pipeline (extract, load, orchestrate) e o processo de automacao usando jobs com suas respectivas tasks foi importante para o meu desenvolvimento pessoal no ingresso do mundo de engenharia de dados. O conjunto, como um todo, para o intervalo de entrega, provou-se ter uma quantia grande de conteudos e acredito que me sai bem dentro do que consegui fazer.
+
+O desafio nao foi completamente vencido, como podem notar pela ausencia da capacidade de executar os comandos usando datas anteriores como argumento e ausencia da exigencia de dependencia para a execucao dos pipelines entre si (step 2 nao depende do step 1), porem fiquei orgulhoso com meu rendimento paralelo a universidade e monitoria em uma semana bem caotica. Outro ponto que posso trazer seria que varios processos poderiam ser automatizados atraves de bash files (processo de instalacao e exportacao da variavel que expoe o dia atual), assim como o uso de DAG customizada no airflow (qual tentei implementar sem sucesso, onde uso BashCommand seguido de um DAG trigger). 
+
+Agradeco a oportunidade e a proposta de desafio, pois independente da minha colocacao como aprovado ou nao, foi um otimo projeto de aprendizado e acrescentou muito ao meu dicionario de programador.
